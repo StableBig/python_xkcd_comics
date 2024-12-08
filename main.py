@@ -2,7 +2,6 @@ import requests
 from dotenv import load_dotenv
 import os
 from telegram import Bot
-import asyncio
 import random
 
 
@@ -40,10 +39,10 @@ def download_comic_image(image_url, filename="xkcd_comic.png"):
     return filename
 
 
-async def send_telegram_photo(telegram_bot_token, telegram_chat_id, comic_filename, comic_caption):
+def send_telegram_photo(telegram_bot_token, telegram_chat_id, comic_filename, comic_caption):
     bot = Bot(token=telegram_bot_token)
     with open(comic_filename, "rb") as comic_file:
-        await bot.send_photo(
+        bot.send_photo(
             chat_id=telegram_chat_id,
             photo=comic_file,
             caption=comic_caption
@@ -70,12 +69,12 @@ def main():
         comic_filename = download_comic_image(random_comic_info['img_url'])
         print(f"Комикс сохранён локально как {comic_filename}")
 
-        asyncio.run(send_telegram_photo(
+        send_telegram_photo(
             telegram_bot_token=telegram_bot_token,
             telegram_chat_id=telegram_chat_id,
             comic_filename=comic_filename,
             comic_caption=f"#{random_comic_info['num']}: {random_comic_info['alt_text']}"
-        ))
+        )
         print("Комикс отправлен в Telegram!")
 
     except Exception as e:
