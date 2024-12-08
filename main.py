@@ -49,3 +49,9 @@ async def send_telegram_photo():
 
 
 asyncio.run(send_telegram_photo())
+
+if os.path.exists(comic_filename):
+    os.remove(comic_filename)
+    print(f"Файл {comic_filename} успешно удалён.")
+else:
+    print(f"Файл {comic_filename} не найден.")
