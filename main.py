@@ -7,6 +7,7 @@ response.raise_for_status()
 
 comic_data = response.json()
 comic_image_url = comic_data['img']
+comic_alt_text = comic_data['alt']
 
 image_response = requests.get(comic_image_url)
 image_response.raise_for_status()
@@ -14,4 +15,5 @@ image_response.raise_for_status()
 with open("xkcd_comic.png", "wb") as file:
     file.write(image_response.content)
 
+print("Комментарий к комиксу:", comic_alt_text)
 print("Комикс скачан и сохранён как xkcd_comic.png")
