@@ -1,4 +1,11 @@
 import requests
+from dotenv import load_dotenv
+import os
+
+load_dotenv()
+client_id = os.getenv("CLIENT_ID")
+
+print(f"Ваш client_id: {client_id}")
 
 comic_url = "https://xkcd.com/353/info.0.json"
 
