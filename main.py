@@ -48,22 +48,24 @@ async def send_telegram_photo(telegram_bot_token, telegram_chat_id, comic_filena
             photo=comic_file,
             caption=comic_caption
         )
-    print(f"Комикс отправлен в Telegram!")
 
 
 def delete_local_file(filename):
     if os.path.exists(filename):
         os.remove(filename)
-        print(f"Файл {filename} успешно удалён.")
-    else:
-        print(f"Файл {filename} не найден.")
+        return True
+    return False
 
 
 def main():
     telegram_bot_token, telegram_chat_id = load_environment_variables()
     latest_comic_num = get_latest_comic_number()
     random_comic_info = get_random_comic_info(latest_comic_num)
+
+    print(f"Случайный комикс: #{random_comic_info['num']}")
+
     comic_filename = download_comic_image(random_comic_info['img_url'])
+    print(f"Комикс сохранён локально как {comic_filename}")
 
     asyncio.run(send_telegram_photo(
         telegram_bot_token=telegram_bot_token,
@@ -71,8 +73,13 @@ def main():
         comic_filename=comic_filename,
         comic_caption=f"#{random_comic_info['num']}: {random_comic_info['alt_text']}"
     ))
+    print("Комикс отправлен в Telegram!")
 
-    delete_local_file(comic_filename)
+    file_deleted = delete_local_file(comic_filename)
+    if file_deleted:
+        print(f"Файл {comic_filename} успешно удалён.")
+    else:
+        print(f"Файл {comic_filename} не найден.")
 
 
 if __name__ == "__main__":
