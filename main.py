@@ -5,53 +5,75 @@ from telegram import Bot
 import asyncio
 import random
 
-load_dotenv()
 
-telegram_bot_token = os.getenv("TELEGRAM_BOT_TOKEN")
-telegram_chat_id = os.getenv("TELEGRAM_CHAT_ID")
-
-latest_comic_url = "https://xkcd.com/info.0.json"
-
-response = requests.get(latest_comic_url)
-response.raise_for_status()
-
-latest_comic_data = response.json()
-latest_comic_num = latest_comic_data['num']
-
-random_comic_num = random.randint(1, latest_comic_num)
-
-random_comic_url = f"https://xkcd.com/{random_comic_num}/info.0.json"
-
-response = requests.get(random_comic_url)
-response.raise_for_status()
-
-comic_data = response.json()
-comic_image_url = comic_data['img']
-comic_alt_text = comic_data['alt']
-
-image_response = requests.get(comic_image_url)
-image_response.raise_for_status()
-
-comic_filename = "xkcd_comic.png"
-with open(comic_filename, "wb") as file:
-    file.write(image_response.content)
+def load_environment_variables():
+    load_dotenv()
+    return os.getenv("TELEGRAM_BOT_TOKEN"), os.getenv("TELEGRAM_CHAT_ID")
 
 
-async def send_telegram_photo():
+def get_latest_comic_number():
+    url = "https://xkcd.com/info.0.json"
+    response = requests.get(url)
+    response.raise_for_status()
+    latest_comic_info = response.json()
+    return latest_comic_info['num']
+
+
+def get_random_comic_info(latest_comic_num):
+    random_comic_num = random.randint(1, latest_comic_num)
+    url = f"https://xkcd.com/{random_comic_num}/info.0.json"
+    response = requests.get(url)
+    response.raise_for_status()
+    random_comic_info = response.json()
+    return {
+        'num': random_comic_num,
+        'img_url': random_comic_info['img'],
+        'alt_text': random_comic_info['alt']
+    }
+
+
+def download_comic_image(image_url, filename="xkcd_comic.png"):
+    response = requests.get(image_url)
+    response.raise_for_status()
+    with open(filename, "wb") as file:
+        file.write(response.content)
+    return filename
+
+
+async def send_telegram_photo(telegram_bot_token, telegram_chat_id, comic_filename, comic_caption):
     bot = Bot(token=telegram_bot_token)
     with open(comic_filename, "rb") as comic_file:
         await bot.send_photo(
             chat_id=telegram_chat_id,
             photo=comic_file,
-            caption=f"#{random_comic_num}: {comic_alt_text}"
+            caption=comic_caption
         )
-    print(f"Комикс #{random_comic_num} отправлен в Telegram!")
+    print(f"Комикс отправлен в Telegram!")
 
 
-asyncio.run(send_telegram_photo())
+def delete_local_file(filename):
+    if os.path.exists(filename):
+        os.remove(filename)
+        print(f"Файл {filename} успешно удалён.")
+    else:
+        print(f"Файл {filename} не найден.")
 
-if os.path.exists(comic_filename):
-    os.remove(comic_filename)
-    print(f"Файл {comic_filename} успешно удалён.")
-else:
-    print(f"Файл {comic_filename} не найден.")
+
+def main():
+    telegram_bot_token, telegram_chat_id = load_environment_variables()
+    latest_comic_num = get_latest_comic_number()
+    random_comic_info = get_random_comic_info(latest_comic_num)
+    comic_filename = download_comic_image(random_comic_info['img_url'])
+
+    asyncio.run(send_telegram_photo(
+        telegram_bot_token=telegram_bot_token,
+        telegram_chat_id=telegram_chat_id,
+        comic_filename=comic_filename,
+        comic_caption=f"#{random_comic_info['num']}: {random_comic_info['alt_text']}"
+    ))
+
+    delete_local_file(comic_filename)
+
+
+if __name__ == "__main__":
+    main()
