@@ -3,15 +3,26 @@ from dotenv import load_dotenv
 import os
 from telegram import Bot
 import asyncio
+import random
 
 load_dotenv()
 
 telegram_bot_token = os.getenv("TELEGRAM_BOT_TOKEN")
 telegram_chat_id = os.getenv("TELEGRAM_CHAT_ID")
 
-comic_url = "https://xkcd.com/353/info.0.json"
+latest_comic_url = "https://xkcd.com/info.0.json"
 
-response = requests.get(comic_url)
+response = requests.get(latest_comic_url)
+response.raise_for_status()
+
+latest_comic_data = response.json()
+latest_comic_num = latest_comic_data['num']
+
+random_comic_num = random.randint(1, latest_comic_num)
+
+random_comic_url = f"https://xkcd.com/{random_comic_num}/info.0.json"
+
+response = requests.get(random_comic_url)
 response.raise_for_status()
 
 comic_data = response.json()
@@ -32,9 +43,9 @@ async def send_telegram_photo():
         await bot.send_photo(
             chat_id=telegram_chat_id,
             photo=comic_file,
-            caption=comic_alt_text
+            caption=f"#{random_comic_num}: {comic_alt_text}"
         )
-    print("Комикс отправлен в Telegram!")
+    print(f"Комикс #{random_comic_num} отправлен в Telegram!")
 
 
 asyncio.run(send_telegram_photo())
