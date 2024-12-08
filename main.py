@@ -64,22 +64,30 @@ def main():
 
     print(f"Случайный комикс: #{random_comic_info['num']}")
 
-    comic_filename = download_comic_image(random_comic_info['img_url'])
-    print(f"Комикс сохранён локально как {comic_filename}")
+    comic_filename = None
 
-    asyncio.run(send_telegram_photo(
-        telegram_bot_token=telegram_bot_token,
-        telegram_chat_id=telegram_chat_id,
-        comic_filename=comic_filename,
-        comic_caption=f"#{random_comic_info['num']}: {random_comic_info['alt_text']}"
-    ))
-    print("Комикс отправлен в Telegram!")
+    try:
+        comic_filename = download_comic_image(random_comic_info['img_url'])
+        print(f"Комикс сохранён локально как {comic_filename}")
 
-    file_deleted = delete_local_file(comic_filename)
-    if file_deleted:
-        print(f"Файл {comic_filename} успешно удалён.")
-    else:
-        print(f"Файл {comic_filename} не найден.")
+        asyncio.run(send_telegram_photo(
+            telegram_bot_token=telegram_bot_token,
+            telegram_chat_id=telegram_chat_id,
+            comic_filename=comic_filename,
+            comic_caption=f"#{random_comic_info['num']}: {random_comic_info['alt_text']}"
+        ))
+        print("Комикс отправлен в Telegram!")
+
+    except Exception as e:
+        print(f"Произошла ошибка: {e}")
+
+    finally:
+        if comic_filename:
+            file_deleted = delete_local_file(comic_filename)
+            if file_deleted:
+                print(f"Файл {comic_filename} успешно удалён.")
+            else:
+                print(f"Файл {comic_filename} не найден.")
 
 
 if __name__ == "__main__":
