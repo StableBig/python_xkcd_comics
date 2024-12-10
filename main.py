@@ -49,13 +49,6 @@ def send_telegram_photo(telegram_bot_token, telegram_chat_id, comic_filename, co
         )
 
 
-def delete_local_file(filename):
-    if os.path.exists(filename):
-        os.remove(filename)
-        return True
-    return False
-
-
 def main():
     telegram_bot_token, telegram_chat_id = load_environment_variables()
     latest_comic_num = get_latest_comic_number()
@@ -82,10 +75,10 @@ def main():
 
     finally:
         if comic_filename:
-            file_deleted = delete_local_file(comic_filename)
-            if file_deleted:
+            try:
+                os.remove(comic_filename)
                 print(f"Файл {comic_filename} успешно удалён.")
-            else:
+            except FileNotFoundError:
                 print(f"Файл {comic_filename} не найден.")
 
 
